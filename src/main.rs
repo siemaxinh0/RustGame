@@ -17,6 +17,13 @@ fn main() {
         //Bevy built-ins.
         .insert_resource(ClearColor(Color::srgb(0.1, 0.0, 0.15)))
 
+        .insert_resource(movement::MapBounds {
+            x_min: -100.0,
+            x_max: 100.0,
+            y_min: -75.0,
+            y_max: 75.0,
+        })
+
         .add_plugins(DefaultPlugins)
 
         //user defined
