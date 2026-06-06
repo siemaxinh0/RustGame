@@ -8,6 +8,38 @@ pub struct Velocity {
     pub value: Vec3
 }
 
+#[derive (Component,Debug)]
+pub enum FacingDirection {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+pub fn direction_from_velocity(velocity: Vec3) -> FacingDirection {
+    if velocity.x > 0.0 {
+        FacingDirection::Right
+    } else if velocity.x < 0.0 {
+        FacingDirection::Left
+    } else if velocity.y > 0.0 {
+        FacingDirection::Up
+    } else {
+        FacingDirection::Down
+    }
+}
+
+pub fn atlas_index(direction: &FacingDirection, frame: usize) -> usize {
+    let row = match direction {
+        FacingDirection::Up => 0,
+        FacingDirection::Down => 1,
+        FacingDirection::Left => 2,
+        FacingDirection::Right => 3,
+    };
+    row * 4 + frame
+}
+
+
+
 #[derive(Resource)]
 pub struct MapBounds {
     pub x_min: f32,
@@ -20,8 +52,7 @@ pub struct MovementPlugin;
 
 impl Plugin for MovementPlugin{
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, (update_position, enforce_map_bounds.after(update_position), draw_map_bounds));
-
+        app.add_systems(Update, update_position);
     }
 }
 
