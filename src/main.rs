@@ -6,6 +6,7 @@ mod enemy;
 mod asset_loader;
 mod collision_handler;
 mod collectable;
+mod map;
 
 use bevy::prelude::*;
 
@@ -23,12 +24,12 @@ fn main() {
         //Bevy built-ins.
         .insert_resource(ClearColor(Color::srgb(0.65, 0.75, 0.8)))
 
-        // .insert_resource(movement::MapBounds {
-        //     x_min: -1000.0,
-        //     x_max: 1000.0,
-        //     y_min: -1000.0,
-        //     y_max: 1000.0,
-        // })
+        .insert_resource(movement::MapBounds {
+             x_min: -64.0,
+             x_max: 64.0,
+             y_min: -64.0,
+             y_max: 64.0,
+         })
 
         .add_plugins(DefaultPlugins)
 
@@ -40,6 +41,7 @@ fn main() {
         .add_plugins(EnemyPlugin)
         .add_plugins(CollectablePlugin)
         .add_plugins(MovementPlugin)
+        .add_plugins(map::MapPlugin)
         .add_plugins(DebugPlugin)
         .run();
 }

@@ -11,7 +11,11 @@ pub struct SpriteAssets {
 pub struct SceneAssets {
     pub enemy: SpriteAssets,
     pub player: SpriteAssets,
-    pub collectable: Handle<Image>
+    pub collectable: Handle<Image>,
+    pub sidewalk: Handle<Image>,
+    pub fresh_grass: Handle<Image>,
+    pub trampled_grass: Handle<Image>,
+    pub dead_skull: Handle<Image>
 }
 
 
@@ -51,6 +55,11 @@ fn load_assets(mut scene_assets: ResMut<SceneAssets>, asset_server : Res<AssetSe
             sheet : asset_server.load("enemy_sheet.png"),
             layout : enemy_layout
         },
-        collectable : asset_server.load("collectable.png")
+        collectable : asset_server.load("collectable.png"),
+        sidewalk: asset_server.load("sidewalk.png"),
+        trampled_grass: asset_server.load("soil.png"),
+        fresh_grass: asset_server.load("grass.png"),
+        dead_skull:asset_server.load("skull.png")
+
     }
 }

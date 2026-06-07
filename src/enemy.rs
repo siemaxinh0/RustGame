@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use rand::{ Rng};
 use crate::asset_loader::SceneAssets;
 use crate::collision_handler::Collider;
+use crate::map::{FreshGrass, TrampledGrass};
 use crate::movement::{atlas_index, direction_from_velocity, FacingDirection, Velocity};
 use crate::player::Player;
 
@@ -85,8 +86,14 @@ fn spawn_enemy(mut commands: Commands, mut spawn_timer : ResMut<SpawnTimer>, tim
 
 fn handle_enemy_collision(mut commands : Commands,
                           enemies: Query<(Entity, &Collider), With<Enemy>>,
-                          players: Query<(), With<Player>>
+                          players: Query<(Entity,&Transform), With<Player>>,
+                          mut has_lost: Local<bool>,
+                          scene_assets: Res<SceneAssets>,
 ) {
+    if *has_lost{
+        return;
+    }
+    let Ok((player_entity, player_transform)) = players.single() else { return; };
     for (enemy_entity, collider) in enemies.iter(){
         let hit_player = collider
             .colliding_entities
@@ -94,8 +101,30 @@ fn handle_enemy_collision(mut commands : Commands,
             .any(|&collided_entity| players.get(collided_entity).is_ok());
 
         if hit_player {
-            //TODO GAME OVER
-            commands.entity(enemy_entity).despawn();
+            *has_lost=true;
+            info!("Jaguar cie dopadl");
+            let death_position = player_transform.translation;
+            commands.spawn((
+                Sprite {
+                    image: scene_assets.dead_skull.clone(),
+                    custom_size: Some(Vec2::new(16.0, 16.0)),
+                    ..default()
+                },
+
+                Transform::from_translation(Vec3::new(death_position.x, death_position.y, 100.0)),
+            ));
+
+            commands.spawn((
+                Text2d::new("PRZEGRANA!!"),
+                TextFont{
+                    font_size: 32.0,
+                    ..default()
+                },
+                TextColor(Color::srgb(1.0,0.0,0.0)),
+                Transform::from_translation(Vec3::new(0.0,0.0,105.0))
+            ));
+            commands.entity(player_entity).despawn();
+            break;
         };
     }
 }

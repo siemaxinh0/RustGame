@@ -52,7 +52,8 @@ pub struct MovementPlugin;
 
 impl Plugin for MovementPlugin{
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, update_position);
+        app.add_systems(Update,
+                        (update_position,enforce_map_bounds,draw_map_bounds));
     }
 }
 
