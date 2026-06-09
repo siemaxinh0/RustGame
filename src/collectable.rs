@@ -4,7 +4,7 @@ use crate::asset_loader::SceneAssets;
 use crate::collision_handler::Collider;
 use crate::map::MapBounds;
 use crate::movement::Velocity;
-use crate::player::Player;
+use crate::player::{Immortal, Player};
 
 const COLLISION_RADIUS : f32 = 8.0;
 const SPAWN_TIME_SECONDS : f32 = 5.0;
@@ -60,16 +60,19 @@ fn spawn_collectable(mut commands : Commands,
 
 fn handle_collectable_collision(mut commands: Commands,
                                 collectables: Query<(Entity, &Collider), With<Collectable>>,
-                                players : Query<(), With<Player>>
+                                players : Query<(Entity), With<Player>>
 ){
+
+    let Ok(player_entity) = players.single() else { return; };
+
     for (collectable_entity, collider) in collectables.iter() {
-        let hit_player = collider
-            .colliding_entities
-            .iter()
-            .any(|&collided_entity| players.get(collided_entity).is_ok());
-        if hit_player {
-            //TODO ADD POINTS
-            commands.entity(collectable_entity).despawn();
-        }
+       if collider.colliding_entities.contains(&player_entity){
+           commands.entity(player_entity).insert(Immortal{
+               timer: Timer::from_seconds(3.0,TimerMode::Once)
+
+           });
+           commands.entity(collectable_entity).despawn();
+
+       }
     }
 }

@@ -4,7 +4,7 @@ use crate::asset_loader::SceneAssets;
 use crate::collision_handler::Collider;
 use crate::map::MapBounds;
 use crate::movement::{atlas_index, direction_from_velocity, FacingDirection, Velocity};
-use crate::player::Player;
+use crate::player::{Immortal, Player};
 
 const VELOCITY_SCALAR : f32 = 10.;
 const SPAWN_TIME_SECONDS : f32 = 1.0;
@@ -96,14 +96,14 @@ fn spawn_enemy(mut commands: Commands,
 
 fn handle_enemy_collision(mut commands : Commands,
                           enemies: Query<(Entity, &Collider), With<Enemy>>,
-                          players: Query<(Entity,&Transform), With<Player>>,
+                          players: Query<(Entity,&Transform,Option<&Immortal>), With<Player>>,
                           mut has_lost: Local<bool>,
                           scene_assets: Res<SceneAssets>,
 ) {
     if *has_lost{
         return;
     }
-    let Ok((player_entity, player_transform)) = players.single() else { return; };
+    let Ok((player_entity, player_transform,is_immortal)) = players.single() else { return; };
     for (_enemy_entity, collider) in enemies.iter(){
         let hit_player = collider
             .colliding_entities
@@ -111,6 +111,9 @@ fn handle_enemy_collision(mut commands : Commands,
             .any(|&collided_entity| players.get(collided_entity).is_ok());
 
         if hit_player {
+            if is_immortal.is_some(){
+                continue;
+            }
             *has_lost=true;
             info!("Jaguar cie dopadl");
             let death_position = player_transform.translation;
@@ -143,6 +146,7 @@ fn handle_enemy_collision(mut commands : Commands,
         };
     }
 }
+
 
 //TODO enemy despwan ob map border collision
 fn despawn_on_map_border(mut commands: Commands,

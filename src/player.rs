@@ -20,6 +20,10 @@ pub enum PlayerState {
     Idle,
     Moving
 }
+#[derive(Component)]
+pub struct Immortal{
+    pub timer: Timer
+}
 
 #[derive(Component, Debug)]
 pub struct PlayerAnimation {
@@ -43,7 +47,28 @@ impl Plugin for PlayerPlugin{
     fn build(&self, app: &mut App) {
         app.add_systems(PostStartup, spawn_player)
             .add_systems(Update,player_movement_controls)
-            .add_systems(Update,animate_player);
+            .add_systems(Update,animate_player)
+            .add_systems(Update,update_immortal);
+    }
+}
+fn update_immortal(mut commands: Commands,time: Res<Time>,mut query: Query<(Entity,&mut Immortal,&mut Sprite)>){
+    for (entity, mut immortal,mut sprite) in query.iter_mut(){
+        immortal.timer.tick(time.delta());
+
+        if immortal.timer.fraction()%0.2<0.1{
+            sprite.color=Color::srgb(1.0,0.8,0.0);
+        }
+        else{
+            sprite.color=Color::WHITE;
+        }
+
+        if immortal.timer.just_finished(){
+            sprite.color=Color::WHITE;
+            commands.entity(entity).remove::<Immortal>();
+
+        }
+
+
     }
 }
 
