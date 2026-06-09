@@ -1,15 +1,12 @@
-use std::ops::Range;
 use bevy::prelude::*;
 use rand::{ Rng};
 use crate::asset_loader::SceneAssets;
 use crate::collision_handler::Collider;
-use crate::map::{FreshGrass, TrampledGrass};
+use crate::map::MapBounds;
 use crate::movement::{atlas_index, direction_from_velocity, FacingDirection, Velocity};
 use crate::player::Player;
 
 const VELOCITY_SCALAR : f32 = 10.;
-const SPAWN_RANGE_X : Range<f32> = -100.0..100.0;
-const SPAWN_RANGE_Y: Range<f32> = -100.0..100.0;
 const SPAWN_TIME_SECONDS : f32 = 1.0;
 const COLLISION_RADIUS : f32 = 16.0;
 
@@ -46,21 +43,22 @@ impl Plugin for EnemyPlugin{
         })
             .add_systems(Update, spawn_enemy)
             .add_systems(Update, animate_enemy)
-            .add_systems(Update, handle_enemy_collision);
+            .add_systems(Update, handle_enemy_collision)
+            .add_systems(Update,despawn_on_map_border);
     }
 }
 
 
-fn spawn_enemy(mut commands: Commands, mut spawn_timer : ResMut<SpawnTimer>, time: Res<Time>, scene_assets: Res<SceneAssets>){
+fn spawn_enemy(mut commands: Commands,
+               mut spawn_timer : ResMut<SpawnTimer>, 
+               time: Res<Time>, scene_assets: Res<SceneAssets>,
+               bounds : Res<MapBounds>
+){
     spawn_timer.timer.tick(time.delta());
     if !spawn_timer.timer.just_finished(){
         return;
     }
-
-    let mut rng = rand::thread_rng();
-
-    let translation = Vec3::new(rng.gen_range(SPAWN_RANGE_X), rng.gen_range(SPAWN_RANGE_Y),0.);
-
+    
     let velocity = random_unit_vector() * VELOCITY_SCALAR;
     let direction = direction_from_velocity(velocity);
 
@@ -71,7 +69,19 @@ fn spawn_enemy(mut commands: Commands, mut spawn_timer : ResMut<SpawnTimer>, tim
             index : atlas_index(&direction,0)
         }
     );
-    sprite.custom_size = Some(Vec2::new(16., 16.));
+    let sprite_size = Vec2::new(16., 16.);
+    sprite.custom_size = Some(sprite_size);
+
+
+    let mut rng = rand::thread_rng();
+
+    let half_width = sprite_size.x / 2.0;
+    let half_height = sprite_size.y / 2.0;
+
+    let range_x = bounds.x_min+half_width..bounds.x_max-half_width;
+    let range_y = bounds.y_min+half_height..bounds.y_max-half_height;
+
+    let translation = Vec3::new(rng.gen_range(range_x), rng.gen_range(range_y),0.);
 
     commands.spawn((
         sprite,
@@ -94,7 +104,7 @@ fn handle_enemy_collision(mut commands : Commands,
         return;
     }
     let Ok((player_entity, player_transform)) = players.single() else { return; };
-    for (enemy_entity, collider) in enemies.iter(){
+    for (_enemy_entity, collider) in enemies.iter(){
         let hit_player = collider
             .colliding_entities
             .iter()
@@ -124,10 +134,37 @@ fn handle_enemy_collision(mut commands : Commands,
                 Transform::from_translation(Vec3::new(0.0,0.0,105.0))
             ));
             commands.entity(player_entity).despawn();
+
+            // for (enemy, _collider) in enemies.iter_mut() {
+            //     commands.entity(enemy).despawn();
+            // }
+
             break;
         };
     }
 }
+
+//TODO enemy despwan ob map border collision
+fn despawn_on_map_border(mut commands: Commands,
+                         mut enemies: Query<(Entity, &mut Transform, &mut Sprite), With<Enemy>>,
+                         bounds: Res<MapBounds>){
+    for (enemy, enemy_transform, sprite) in enemies.iter_mut(){
+
+        let sprite_size = sprite.custom_size.unwrap_or(Vec2::new(32.0, 32.0));
+
+        let half_width = sprite_size.x / 2.0;
+        let half_height = sprite_size.y / 2.0;
+
+        if enemy_transform.translation.x >= bounds.x_max  - half_width||
+            enemy_transform.translation.x <= bounds.x_min + half_width ||
+            enemy_transform.translation.y >= bounds.y_max - half_height||
+            enemy_transform.translation.y <= bounds.y_min + half_height
+        {
+            commands.entity(enemy).despawn();
+        }
+    }
+}
+
 
 fn animate_enemy(
     time: Res<Time>,

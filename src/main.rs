@@ -18,18 +18,13 @@ use crate::asset_loader::AssetLoaderPlugin;
 use crate::collectable::CollectablePlugin;
 use crate::collision_handler::CollisionDetectionPlugin;
 use crate::enemy::EnemyPlugin;
+use crate::map::MapPlugin;
 
 fn main() {
     App::new()
         //Bevy built-ins.
         .insert_resource(ClearColor(Color::srgb(0.65, 0.75, 0.8)))
-
-        .insert_resource(movement::MapBounds {
-             x_min: -64.0,
-             x_max: 64.0,
-             y_min: -64.0,
-             y_max: 64.0,
-         })
+        
 
         .add_plugins(DefaultPlugins)
 
@@ -41,7 +36,7 @@ fn main() {
         .add_plugins(EnemyPlugin)
         .add_plugins(CollectablePlugin)
         .add_plugins(MovementPlugin)
-        .add_plugins(map::MapPlugin)
+        .add_plugins(MapPlugin)
         .add_plugins(DebugPlugin)
         .run();
 }

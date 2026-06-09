@@ -1,6 +1,7 @@
 use crate::asset_loader::SceneAssets;
 use crate::player::Player;
 use bevy::prelude::*;
+use crate::movement::{Velocity};
 
 #[derive(Component)]
 pub struct Sidewalk;
@@ -11,18 +12,38 @@ pub struct FreshGrass;
 #[derive(Component)]
 pub struct TrampledGrass;
 
-const TILE_SIZE: f32 = 16.0;
+const TILE_SIZE: f32 = 18.0;
 
-const MAP_LAYOUT: [&str; 8] = [
-    "########", "#......#", "#.####.#", "#.#..#.#", "#.#..#.#", "#.####.#", "#......#", "########",
+const MAP_LAYOUT: [&str; 10] = [
+"##################",
+"###............###",
+"###..########..###",
+"###..##....##..###",
+"###..##....##..###",
+"###..##....##..###",
+"###..##....##..###",
+"###..########..###",
+"###............###",
+"##################"
 ];
 
-fn spawn_map(mut commands: Commands, scene_assets: Res<SceneAssets>) {
-    let map_width=MAP_LAYOUT[0].len() as f32 * TILE_SIZE;
-    let map_height=MAP_LAYOUT.len() as f32 * TILE_SIZE;
+#[derive(Resource)]
+pub struct MapBounds {
+    pub x_min: f32,
+    pub y_min: f32,
+    pub x_max: f32,
+    pub y_max: f32,
+}
 
-    let start_x=-(map_width/2.0)+ (TILE_SIZE /2.0);
-    let start_y=(map_height /2.0)- (TILE_SIZE/ 2.0);
+const MAP_WIDTH : f32 = MAP_LAYOUT[0].len() as f32 * TILE_SIZE;
+const MAP_HEIGHT : f32=MAP_LAYOUT.len() as f32 * TILE_SIZE;
+
+
+fn draw_map(mut commands: Commands, scene_assets: Res<SceneAssets>) {
+
+
+    let start_x=-(MAP_WIDTH/2.0)+ (TILE_SIZE /2.0);
+    let start_y=(MAP_HEIGHT/2.0)- (TILE_SIZE/ 2.0);
 
     for (row_idx, row) in MAP_LAYOUT.iter().enumerate() {
         for (col_idx, tile_char) in row.chars().enumerate() {
@@ -102,11 +123,43 @@ fn check_win_state(mut commands: Commands,fresh_grass_query: Query<(), With<Fres
     }
 }
 
+
+fn enforce_map_bounds(mut query: Query<(&mut Transform, &mut Sprite), With<Velocity>>, bounds: Res<MapBounds>,) {
+    for (mut transform, sprite) in query.iter_mut() {
+
+        let sprite_size = sprite.custom_size.unwrap_or(Vec2::new(32.0, 32.0));
+
+        let half_width = sprite_size.x / 2.0;
+        let half_height = sprite_size.y / 2.0;
+
+        let clamped_x = transform.translation.x.clamp(
+            bounds.x_min + half_width,
+            bounds.x_max - half_width,
+        );
+
+        let clamped_y = transform.translation.y.clamp(
+            bounds.y_min + half_height,
+            bounds.y_max - half_height,
+        );
+
+        transform.translation.x = clamped_x;
+        transform.translation.y = clamped_y;
+    }
+}
+
+
 pub struct MapPlugin;
 
 impl Plugin for MapPlugin{
     fn build(&self,app: &mut App){
-        app.add_systems(PostStartup,spawn_map)
-            .add_systems(Update,(trample_grass, check_win_state));
+        app
+            .insert_resource(MapBounds { 
+                x_min:-MAP_WIDTH/2., 
+                y_min:-MAP_HEIGHT/2.,
+                x_max : MAP_WIDTH/2.,
+                y_max : MAP_HEIGHT/2.
+            })
+            .add_systems(PostStartup,draw_map)
+            .add_systems(Update,(trample_grass, check_win_state,enforce_map_bounds));
     }
 }

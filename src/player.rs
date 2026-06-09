@@ -4,7 +4,6 @@ use bevy::prelude::*;
 use bevy::sprite::Sprite;
 use crate::asset_loader::SceneAssets;
 use crate::collision_handler::Collider;
-use crate::enemy::{Enemy, EnemyAnimation};
 use crate::movement::{atlas_index, direction_from_velocity, FacingDirection, Velocity};
 
 const STARTING_TRANSLATION : Vec3 = Vec3::new(0.,0.,-20.);

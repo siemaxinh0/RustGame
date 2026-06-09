@@ -1,13 +1,11 @@
-use std::ops::{ Range};
 use bevy::prelude::*;
 use rand::Rng;
 use crate::asset_loader::SceneAssets;
 use crate::collision_handler::Collider;
+use crate::map::MapBounds;
 use crate::movement::Velocity;
 use crate::player::Player;
 
-const SPAWN_RANGE_X : Range<f32> = -100.0..100.0;
-const SPAWN_RANGE_Y: Range<f32> = -100.0..100.0;
 const COLLISION_RADIUS : f32 = 8.0;
 const SPAWN_TIME_SECONDS : f32 = 5.0;
 #[derive(Component,Debug)]
@@ -30,14 +28,22 @@ impl Plugin for CollectablePlugin {
     }
 }
 
-fn spawn_collectable(mut commands : Commands, mut spawn_timer: ResMut<SpawnTimer>, time: Res<Time>, scene_assets: Res<SceneAssets>) {
+fn spawn_collectable(mut commands : Commands,
+                     mut spawn_timer: ResMut<SpawnTimer>,
+                     time: Res<Time>,
+                     scene_assets: Res<SceneAssets>,
+                     bounds : Res<MapBounds>) {
     spawn_timer.timer.tick(time.delta());
     if !spawn_timer.timer.just_finished(){
         return;
     }
 
     let mut rng = rand::thread_rng();
-    let translation = Vec3::new(rng.gen_range(SPAWN_RANGE_X), rng.gen_range(SPAWN_RANGE_Y), -30.);
+
+    let range_x = bounds.x_min..bounds.x_max;
+    let range_y = bounds.y_min..bounds.y_max;
+
+    let translation = Vec3::new(rng.gen_range(range_x), rng.gen_range(range_y), -30.);
 
     commands.spawn((
         Sprite {
