@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-bevy = "0.18.1"
+bevy = { version = "0.18.1", features = ["mp3"] }
 rand = "0.8.6"
 [profile-dev]
 opt-level = 1

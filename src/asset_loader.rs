@@ -1,5 +1,6 @@
 use bevy::asset::Handle;
 use bevy::prelude::*;
+use bevy::audio::Volume;
 
 #[derive(Resource, Default)]
 pub struct SpriteAssets {
@@ -15,10 +16,9 @@ pub struct SceneAssets {
     pub sidewalk: Handle<Image>,
     pub fresh_grass: Handle<Image>,
     pub trampled_grass: Handle<Image>,
-    pub dead_skull: Handle<Image>
+    pub dead_skull: Handle<Image>,
+    pub background_music: Handle<AudioSource>, // <-- NOWE: Miejsce na uchwyt do muzyki
 }
-
-
 
 pub struct AssetLoaderPlugin;
 
@@ -28,7 +28,12 @@ impl Plugin for AssetLoaderPlugin{
     }
 }
 
-fn load_assets(mut scene_assets: ResMut<SceneAssets>, asset_server : Res<AssetServer>, mut atlas_layouts: ResMut<Assets<TextureAtlasLayout>>){
+fn load_assets(
+    mut scene_assets: ResMut<SceneAssets>,
+    asset_server: Res<AssetServer>,
+    mut atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
+    mut commands: Commands,
+){
     let player_layout = atlas_layouts.add(TextureAtlasLayout::from_grid(
         UVec2::new(64, 64),
         4,
@@ -44,6 +49,7 @@ fn load_assets(mut scene_assets: ResMut<SceneAssets>, asset_server : Res<AssetSe
         None,
         None,
     ));
+    let music_handle: Handle<AudioSource> = asset_server.load("music_mainmap.mp3");
 
     *scene_assets = SceneAssets {
         player : SpriteAssets {
@@ -59,7 +65,13 @@ fn load_assets(mut scene_assets: ResMut<SceneAssets>, asset_server : Res<AssetSe
         sidewalk: asset_server.load("sidewalk.png"),
         trampled_grass: asset_server.load("soil.png"),
         fresh_grass: asset_server.load("grass.png"),
-        dead_skull:asset_server.load("skull.png")
+        dead_skull: asset_server.load("skull.png"),
+        background_music: music_handle.clone(),
+    };
 
-    }
+    commands.spawn((
+        AudioPlayer::new(music_handle),
+        // Zmiana z Volume::new na Volume::Linear
+        PlaybackSettings::LOOP.with_volume(Volume::Linear(0.2)),
+    ));
 }
