@@ -1,3 +1,4 @@
+use bevy::math::ops::abs;
 use bevy::prelude::*;
 use rand::{ Rng};
 use crate::asset_loader::SceneAssets;
@@ -9,6 +10,7 @@ use crate::player::{Immortal, Player};
 const VELOCITY_SCALAR : f32 = 10.;
 const SPAWN_TIME_SECONDS : f32 = 1.0;
 const COLLISION_RADIUS : f32 = 16.0;
+const PLAYER_SAFE_RANGE : f32 = 20.;
 
 #[derive(Component, Debug)]
 pub struct Enemy;
@@ -52,6 +54,7 @@ impl Plugin for EnemyPlugin{
 fn spawn_enemy(mut commands: Commands,
                mut spawn_timer : ResMut<SpawnTimer>, 
                time: Res<Time>, scene_assets: Res<SceneAssets>,
+               players: Query<&Transform, With<Player>>,
                bounds : Res<MapBounds>
 ){
     spawn_timer.timer.tick(time.delta());
@@ -72,16 +75,9 @@ fn spawn_enemy(mut commands: Commands,
     let sprite_size = Vec2::new(16., 16.);
     sprite.custom_size = Some(sprite_size);
 
+    let Ok( player_transform) = players.single() else { return; };
 
-    let mut rng = rand::thread_rng();
-
-    let half_width = sprite_size.x / 2.0;
-    let half_height = sprite_size.y / 2.0;
-
-    let range_x = bounds.x_min+half_width..bounds.x_max-half_width;
-    let range_y = bounds.y_min+half_height..bounds.y_max-half_height;
-
-    let translation = Vec3::new(rng.gen_range(range_x), rng.gen_range(range_y),0.);
+    let translation = player_safe_spawn_position(player_transform.translation,bounds,sprite_size);
 
     commands.spawn((
         sprite,
@@ -198,4 +194,29 @@ fn random_unit_vector() -> Vec3{
         0.5..0.75 => Vec3::new(-1.,0.,0.),
         _ => Vec3::new(0.,1.,0.)
     }
+}
+
+fn player_safe_spawn_position(player_translation: Vec3, bounds : Res<MapBounds>, sprite_size: Vec2) -> Vec3 {
+
+    let mut rng = rand::thread_rng();
+
+    let half_width = sprite_size.x / 2.0;
+    let half_height = sprite_size.y / 2.0;
+
+
+    let range_x = bounds.x_min+half_width..bounds.x_max-half_width;
+    let range_y = bounds.y_min+half_height..bounds.y_max-half_height;
+
+    let mut spawn_x : f32 =rng.gen_range(range_x.clone());
+    let mut spawn_y : f32 = rng.gen_range(range_y.clone());
+
+    //not deterministic but acceptable for our project scale
+    while abs(spawn_x - player_translation.x )< PLAYER_SAFE_RANGE{
+        spawn_x =rng.gen_range(range_x.clone());
+    }
+
+    while abs(spawn_y - player_translation.y )< PLAYER_SAFE_RANGE{
+        spawn_y =rng.gen_range(range_y.clone());
+    }
+    Vec3::new(spawn_x,spawn_y ,0.)
 }

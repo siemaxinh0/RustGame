@@ -60,7 +60,7 @@ fn spawn_collectable(mut commands : Commands,
 
 fn handle_collectable_collision(mut commands: Commands,
                                 collectables: Query<(Entity, &Collider), With<Collectable>>,
-                                players : Query<(Entity), With<Player>>
+                                players : Query<Entity, With<Player>>
 ){
 
     let Ok(player_entity) = players.single() else { return; };
