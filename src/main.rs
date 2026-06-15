@@ -7,6 +7,7 @@ mod asset_loader;
 mod collision_handler;
 mod collectable;
 mod map;
+mod state;
 
 use bevy::prelude::*;
 
