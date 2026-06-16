@@ -43,7 +43,7 @@ fn spawn_collectable(mut commands : Commands,
     let range_x = bounds.x_min..bounds.x_max;
     let range_y = bounds.y_min..bounds.y_max;
 
-    let translation = Vec3::new(rng.gen_range(range_x), rng.gen_range(range_y), -30.);
+    let translation = Vec3::new(rng.gen_range(range_x), rng.gen_range(range_y), -20.);
 
     commands.spawn((
         Sprite {

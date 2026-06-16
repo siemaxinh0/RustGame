@@ -17,7 +17,9 @@ pub struct SceneAssets {
     pub fresh_grass: Handle<Image>,
     pub trampled_grass: Handle<Image>,
     pub dead_skull: Handle<Image>,
-    pub background_music: Handle<AudioSource>, // <-- NOWE: Miejsce na uchwyt do muzyki
+    pub background_music: Handle<AudioSource>,
+    pub building_1: Handle<Image>,
+    pub building_2: Handle<Image>,
 }
 
 pub struct AssetLoaderPlugin;
@@ -67,11 +69,13 @@ fn load_assets(
         fresh_grass: asset_server.load("grass.png"),
         dead_skull: asset_server.load("skull.png"),
         background_music: music_handle.clone(),
+        building_1: asset_server.load("building_1.png"),
+        building_2: asset_server.load("building_2.png")
     };
 
     commands.spawn((
         AudioPlayer::new(music_handle),
-        // Zmiana z Volume::new na Volume::Linear
+
         PlaybackSettings::LOOP.with_volume(Volume::Linear(0.2)),
     ));
 }
