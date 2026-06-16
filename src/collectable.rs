@@ -5,6 +5,7 @@ use crate::collision_handler::Collider;
 use crate::map::MapBounds;
 use crate::movement::Velocity;
 use crate::player::{Immortal, Player};
+use crate::state::GameState;
 
 const COLLISION_RADIUS : f32 = 8.0;
 const SPAWN_TIME_SECONDS : f32 = 5.0;
@@ -23,8 +24,8 @@ impl Plugin for CollectablePlugin {
         app.insert_resource(SpawnTimer {
             timer : Timer::from_seconds(SPAWN_TIME_SECONDS, TimerMode::Repeating),
         })
-            .add_systems(Update, spawn_collectable)
-            .add_systems(Update, handle_collectable_collision);
+            .add_systems(Update, spawn_collectable.run_if(in_state(GameState::Playing)))
+            .add_systems(Update, handle_collectable_collision.run_if(in_state(GameState::Playing)));
     }
 }
 

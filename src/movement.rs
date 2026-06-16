@@ -1,6 +1,7 @@
 use bevy::app::{App, Plugin, Update};
 use bevy::math::Vec3;
 use bevy::prelude::*;
+use crate::state::GameState;
 
 
 #[derive (Component,Debug)]
@@ -42,7 +43,7 @@ pub struct MovementPlugin;
 
 impl Plugin for MovementPlugin{
     fn build(&self, app: &mut App) {
-        app.add_systems(Update,update_position);
+        app.add_systems(Update, update_position.run_if(in_state(GameState::Playing)));
         // (update_position,draw_map_bounds));
     }
 }

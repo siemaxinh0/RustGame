@@ -2,6 +2,7 @@ use crate::asset_loader::SceneAssets;
 use crate::player::Player;
 use bevy::prelude::*;
 use crate::movement::{Velocity};
+use crate::state::{GameResult, GameState};
 
 #[derive(Component)]
 pub struct Sidewalk;
@@ -103,23 +104,15 @@ fn trample_grass(mut commands: Commands,
     }
 
 }
-fn check_win_state(mut commands: Commands,fresh_grass_query: Query<(), With<FreshGrass>>,mut has_won: Local<bool>){
-    if *has_won{
-        return;
-    }
+fn check_win_state(
+    fresh_grass_query: Query<(), With<FreshGrass>>,
+    mut game_result: ResMut<GameResult>,
+    mut next_state: ResMut<NextState<GameState>>,
+){
     if fresh_grass_query.is_empty(){
-        *has_won=true;
         info!("WYGRANA");
-
-    commands.spawn((
-        Text2d::new("WYGRANA!!!"),
-        TextFont{
-            font_size:32.0,
-            ..default()
-        },
-        TextColor(Color::srgb(1.0,0.8,0.0)),
-        Transform::from_translation(Vec3::new(0.0,0.0,100.0))
-        ));
+        game_result.won = true;
+        next_state.set(GameState::GameOver);
     }
 }
 
@@ -159,7 +152,11 @@ impl Plugin for MapPlugin{
                 x_max : MAP_WIDTH/2.,
                 y_max : MAP_HEIGHT/2.
             })
-            .add_systems(PostStartup,draw_map)
-            .add_systems(Update,(trample_grass, check_win_state,enforce_map_bounds));
+            .add_systems(OnEnter(GameState::Playing), draw_map)
+            .add_systems(
+                Update,
+                (trample_grass, check_win_state, enforce_map_bounds)
+                    .run_if(in_state(GameState::Playing)),
+            );
     }
 }

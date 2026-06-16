@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use bevy::prelude::*;
+use crate::state::GameState;
 
 #[derive(Component,Debug)]
 pub struct Collider {
@@ -21,7 +22,7 @@ pub struct CollisionDetectionPlugin;
 
 impl Plugin for CollisionDetectionPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, collision_detection);
+        app.add_systems(Update, collision_detection.run_if(in_state(GameState::Playing)));
     }
 }
 

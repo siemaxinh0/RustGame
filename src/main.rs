@@ -20,6 +20,7 @@ use crate::collectable::CollectablePlugin;
 use crate::collision_handler::CollisionDetectionPlugin;
 use crate::enemy::EnemyPlugin;
 use crate::map::MapPlugin;
+use crate::state::StatePlugin;
 
 fn main() {
     App::new()
@@ -30,6 +31,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
 
         //user defined
+        .add_plugins(StatePlugin)
         .add_plugins(AssetLoaderPlugin)
         .add_plugins(CameraPlugin)
         .add_plugins(CollisionDetectionPlugin)

@@ -6,6 +6,7 @@ use crate::collision_handler::Collider;
 use crate::map::MapBounds;
 use crate::movement::{atlas_index, direction_from_velocity, FacingDirection, Velocity};
 use crate::player::{Immortal, Player};
+use crate::state::{DeathMarker, GameResult, GameState};
 
 const VELOCITY_SCALAR : f32 = 10.;
 const SPAWN_TIME_SECONDS : f32 = 1.0;
@@ -43,10 +44,10 @@ impl Plugin for EnemyPlugin{
         app.insert_resource(SpawnTimer {
             timer: Timer::from_seconds(SPAWN_TIME_SECONDS, TimerMode::Repeating),
         })
-            .add_systems(Update, spawn_enemy)
-            .add_systems(Update, animate_enemy)
-            .add_systems(Update, handle_enemy_collision)
-            .add_systems(Update,despawn_on_map_border);
+            .add_systems(Update, spawn_enemy.run_if(in_state(GameState::Playing)))
+            .add_systems(Update, animate_enemy.run_if(in_state(GameState::Playing)))
+            .add_systems(Update, handle_enemy_collision.run_if(in_state(GameState::Playing)))
+            .add_systems(Update, despawn_on_map_border.run_if(in_state(GameState::Playing)));
     }
 }
 
@@ -93,12 +94,10 @@ fn spawn_enemy(mut commands: Commands,
 fn handle_enemy_collision(mut commands : Commands,
                           enemies: Query<(Entity, &Collider), With<Enemy>>,
                           players: Query<(Entity,&Transform,Option<&Immortal>), With<Player>>,
-                          mut has_lost: Local<bool>,
                           scene_assets: Res<SceneAssets>,
+                          mut game_result: ResMut<GameResult>,
+                          mut next_state: ResMut<NextState<GameState>>,
 ) {
-    if *has_lost{
-        return;
-    }
     let Ok((player_entity, player_transform,is_immortal)) = players.single() else { return; };
     for (_enemy_entity, collider) in enemies.iter(){
         let hit_player = collider
@@ -110,7 +109,6 @@ fn handle_enemy_collision(mut commands : Commands,
             if is_immortal.is_some(){
                 continue;
             }
-            *has_lost=true;
             info!("Jaguar cie dopadl");
             let death_position = player_transform.translation;
             commands.spawn((
@@ -119,24 +117,14 @@ fn handle_enemy_collision(mut commands : Commands,
                     custom_size: Some(Vec2::new(16.0, 16.0)),
                     ..default()
                 },
-
                 Transform::from_translation(Vec3::new(death_position.x, death_position.y, 100.0)),
+                DeathMarker,
             ));
 
-            commands.spawn((
-                Text2d::new("PRZEGRANA!!"),
-                TextFont{
-                    font_size: 32.0,
-                    ..default()
-                },
-                TextColor(Color::srgb(1.0,0.0,0.0)),
-                Transform::from_translation(Vec3::new(0.0,0.0,105.0))
-            ));
             commands.entity(player_entity).despawn();
 
-            // for (enemy, _collider) in enemies.iter_mut() {
-            //     commands.entity(enemy).despawn();
-            // }
+            game_result.won = false;
+            next_state.set(GameState::GameOver);
 
             break;
         };

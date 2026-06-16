@@ -1,6 +1,7 @@
 use bevy::asset::Handle;
 use bevy::prelude::*;
 use bevy::audio::Volume;
+use crate::state::GameState;
 
 #[derive(Resource, Default)]
 pub struct SpriteAssets {
@@ -24,7 +25,9 @@ pub struct AssetLoaderPlugin;
 
 impl Plugin for AssetLoaderPlugin{
     fn build(&self, app: &mut App) {
-        app.init_resource::<SceneAssets>().add_systems(Startup,load_assets);
+        app.init_resource::<SceneAssets>()
+            .add_systems(Startup, load_assets)
+            .add_systems(Update, check_assets_ready.run_if(in_state(GameState::Loading)));
     }
 }
 
@@ -74,4 +77,24 @@ fn load_assets(
         // Zmiana z Volume::new na Volume::Linear
         PlaybackSettings::LOOP.with_volume(Volume::Linear(0.2)),
     ));
+}
+
+// Czeka aż wszystkie tekstury (wraz z zależnościami) zostaną w pełni załadowane,
+// dopiero wtedy uruchamia rozgrywkę. Zapobiega rysowaniu planszy z niegotowymi assetami.
+fn check_assets_ready(
+    asset_server: Res<AssetServer>,
+    scene_assets: Res<SceneAssets>,
+    mut next_state: ResMut<NextState<GameState>>,
+) {
+    let ready = asset_server.is_loaded_with_dependencies(&scene_assets.player.sheet)
+        && asset_server.is_loaded_with_dependencies(&scene_assets.enemy.sheet)
+        && asset_server.is_loaded_with_dependencies(&scene_assets.collectable)
+        && asset_server.is_loaded_with_dependencies(&scene_assets.sidewalk)
+        && asset_server.is_loaded_with_dependencies(&scene_assets.fresh_grass)
+        && asset_server.is_loaded_with_dependencies(&scene_assets.trampled_grass)
+        && asset_server.is_loaded_with_dependencies(&scene_assets.dead_skull);
+
+    if ready {
+        next_state.set(GameState::Playing);
+    }
 }
