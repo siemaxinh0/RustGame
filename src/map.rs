@@ -13,7 +13,9 @@ pub struct FreshGrass;
 #[derive(Component)]
 pub struct TrampledGrass;
 
-const TILE_SIZE: f32 = 18.0;
+const TILE_SIZE: f32 = 14.0;
+const BUILDING_TILE_W: f32 = 3.*TILE_SIZE;
+const BUILDING_TILE_H: f32 = 4.*TILE_SIZE;
 
 const MAP_LAYOUT: [&str; 10] = [
 "##################",
@@ -80,6 +82,50 @@ fn draw_map(mut commands: Commands, scene_assets: Res<SceneAssets>) {
         }
     }
 }
+
+fn draw_map_borders(mut commands: Commands, scene_assets: Res<SceneAssets>) {
+    let ratio = BUILDING_TILE_W / TILE_SIZE; // = 3.0
+
+    // Ile kafelków budynku pokrywa szerokość/wysokość mapy (zaokrąglamy w górę)
+    let map_cols_in_buildings = (MAP_LAYOUT[0].len() as f32 / ratio).ceil() as i32;
+    let map_rows_in_buildings = (MAP_LAYOUT.len() as f32 / ratio).ceil() as i32 + 1;
+
+    // Cała siatka: mapa + 1 kafelek budynku z każdej strony
+    let total_cols = map_cols_in_buildings + 2;
+    let total_rows = map_rows_in_buildings + 2;
+
+    // Środek lewego górnego kafelka obramowania jest przesunięty, aby wziąć pod uwagę cień
+    let start_x = -(MAP_WIDTH / 2.0) - (BUILDING_TILE_W / 2.0);
+    let start_y =  (MAP_HEIGHT / 2.0) + (BUILDING_TILE_H / 6.0);
+
+    for row in 0..total_rows {
+        for col in 0..total_cols {
+            // Pomiń wnętrze (obszar należący do mapy)
+            if row >= 1 && row <= map_rows_in_buildings
+                && col >= 1 && col <= map_cols_in_buildings {
+                continue;
+            }
+            let mut image = scene_assets.building_2.clone();
+
+            if (row==0 || row ==total_rows-1) && col!=0 && col!=total_cols-1 {
+                image = scene_assets.building_1.clone();
+            }
+
+            let x = start_x + col as f32 * BUILDING_TILE_W;
+            let y = start_y - row as f32 * 0.5*BUILDING_TILE_H;
+
+            commands.spawn((
+                Sprite {
+                    image,
+                    custom_size: Some(Vec2::new(BUILDING_TILE_W, BUILDING_TILE_H)),
+                    ..default()
+                },
+                Transform::from_translation(Vec3::new(x, y, 20.0)),
+            ));
+        }
+    }
+}
+
 fn trample_grass(mut commands: Commands,
                  player_query: Query<&Transform,With<Player>>,
                  mut grass_query: Query<(Entity,&Transform, &mut Sprite),With<FreshGrass>>,
@@ -152,7 +198,7 @@ impl Plugin for MapPlugin{
                 x_max : MAP_WIDTH/2.,
                 y_max : MAP_HEIGHT/2.
             })
-            .add_systems(OnEnter(GameState::Playing), draw_map)
+            .add_systems(OnEnter(GameState::Playing), (draw_map,draw_map_borders))
             .add_systems(
                 Update,
                 (trample_grass, check_win_state).run_if(in_state(GameState::Playing)),

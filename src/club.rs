@@ -20,7 +20,7 @@ pub const CLUB_HALF: Vec2 = Vec2::new(51.0, 28.6);
 // Ochroniarz stoi tuż przy wejściu (dolna krawędź budynku), na środku.
 // >> Pozycję ochroniarza dostrajasz tu: zwiększ ostatni dodawany offset (+8.0),
 //    aby przesunąć go bardziej DO GÓRY, w stronę budynku.
-const BOUNCER_POS: Vec3 = Vec3::new(0.0, CLUB_CENTER.y - CLUB_HALF.y + 1.0, -15.0);
+const BOUNCER_POS: Vec3 = Vec3::new(0.0, CLUB_CENTER.y - CLUB_HALF.y + 1.0, 45.0);
 // Rozmiar ochroniarza - taki sam jak przeciwnicy (16x16).
 const BOUNCER_SIZE: f32 = 16.0;
 // Połowa prostokąta kolizji ochroniarza.
@@ -63,7 +63,7 @@ impl Plugin for ClubPlugin {
 fn spawn_club(mut commands: Commands, scene_assets: Res<SceneAssets>) {
     let width = CLUB_HALF.x * 2.0;
     let height = CLUB_HALF.y * 2.0;
-    let center = CLUB_CENTER.extend(-40.0);
+    let center = CLUB_CENTER.extend(40.0);
 
     // Budynek D17 jako sprite (napis "D17" jest już częścią tekstury).
     commands.spawn((

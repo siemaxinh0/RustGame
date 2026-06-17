@@ -24,6 +24,8 @@ pub struct SceneAssets {
     pub dead_skull: Handle<Image>,
     pub background_music: Handle<AudioSource>,
     pub boss_music: Handle<AudioSource>,
+    pub building_1: Handle<Image>,
+    pub building_2: Handle<Image>,
 }
 
 // Marker encji odtwarzajacej muzyke zwyklej rozgrywki (pauzowana na czas walki z bossem).
@@ -86,6 +88,8 @@ fn load_assets(
         dead_skull: asset_server.load("skull.png"),
         background_music: music_handle.clone(),
         boss_music: boss_music_handle,
+        building_1: asset_server.load("building_1.png"),
+        building_2: asset_server.load("building_2.png")
     };
 
     commands.spawn((
