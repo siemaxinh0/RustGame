@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use rand::Rng;
 use crate::asset_loader::SceneAssets;
+use crate::club::overlaps_club;
 use crate::collision_handler::Collider;
 use crate::map::MapBounds;
 use crate::movement::Velocity;
@@ -44,7 +45,14 @@ fn spawn_collectable(mut commands : Commands,
     let range_x = bounds.x_min..bounds.x_max;
     let range_y = bounds.y_min..bounds.y_max;
 
-    let translation = Vec3::new(rng.gen_range(range_x), rng.gen_range(range_y), -30.);
+    // Losuj poza bryłą budynku D17 (piwa nie pojawiają się na budynku).
+    let translation = loop {
+        let x = rng.gen_range(range_x.clone());
+        let y = rng.gen_range(range_y.clone());
+        if !overlaps_club(Vec2::new(x, y), 6.0) {
+            break Vec3::new(x, y, -30.);
+        }
+    };
 
     commands.spawn((
         Sprite {

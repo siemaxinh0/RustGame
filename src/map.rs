@@ -2,7 +2,7 @@ use crate::asset_loader::SceneAssets;
 use crate::player::Player;
 use bevy::prelude::*;
 use crate::movement::{Velocity};
-use crate::state::{GameResult, GameState};
+use crate::state::{in_gameplay, GameResult, GameState};
 
 #[derive(Component)]
 pub struct Sidewalk;
@@ -155,8 +155,8 @@ impl Plugin for MapPlugin{
             .add_systems(OnEnter(GameState::Playing), draw_map)
             .add_systems(
                 Update,
-                (trample_grass, check_win_state, enforce_map_bounds)
-                    .run_if(in_state(GameState::Playing)),
-            );
+                (trample_grass, check_win_state).run_if(in_state(GameState::Playing)),
+            )
+            .add_systems(Update, enforce_map_bounds.run_if(in_gameplay));
     }
 }

@@ -8,6 +8,9 @@ mod collision_handler;
 mod collectable;
 mod map;
 mod state;
+mod coin;
+mod club;
+mod boss;
 
 use bevy::prelude::*;
 
@@ -21,6 +24,9 @@ use crate::collision_handler::CollisionDetectionPlugin;
 use crate::enemy::EnemyPlugin;
 use crate::map::MapPlugin;
 use crate::state::StatePlugin;
+use crate::coin::CoinPlugin;
+use crate::club::ClubPlugin;
+use crate::boss::BossPlugin;
 
 fn main() {
     App::new()
@@ -40,6 +46,9 @@ fn main() {
         .add_plugins(CollectablePlugin)
         .add_plugins(MovementPlugin)
         .add_plugins(MapPlugin)
+        .add_plugins(CoinPlugin)
+        .add_plugins(ClubPlugin)
+        .add_plugins(BossPlugin)
         .add_plugins(DebugPlugin)
         .run();
 }

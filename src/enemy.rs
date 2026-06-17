@@ -2,6 +2,7 @@ use bevy::math::ops::abs;
 use bevy::prelude::*;
 use rand::{ Rng};
 use crate::asset_loader::SceneAssets;
+use crate::club::overlaps_club;
 use crate::collision_handler::Collider;
 use crate::map::MapBounds;
 use crate::movement::{atlas_index, direction_from_velocity, FacingDirection, Velocity};
@@ -146,7 +147,9 @@ fn despawn_on_map_border(mut commands: Commands,
         if enemy_transform.translation.x >= bounds.x_max  - half_width||
             enemy_transform.translation.x <= bounds.x_min + half_width ||
             enemy_transform.translation.y >= bounds.y_max - half_height||
-            enemy_transform.translation.y <= bounds.y_min + half_height
+            enemy_transform.translation.y <= bounds.y_min + half_height ||
+            // Przeciwnik wszedl w obreb budynku D17 - despawn (jak na krancu mapy).
+            overlaps_club(enemy_transform.translation.truncate(), half_width.min(half_height))
         {
             commands.entity(enemy).despawn();
         }

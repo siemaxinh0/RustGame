@@ -5,7 +5,7 @@ use bevy::sprite::Sprite;
 use crate::asset_loader::SceneAssets;
 use crate::collision_handler::Collider;
 use crate::movement::{atlas_index, direction_from_velocity, FacingDirection, Velocity};
-use crate::state::GameState;
+use crate::state::{in_gameplay, GameState};
 
 const STARTING_TRANSLATION : Vec3 = Vec3::new(0.,0.,-20.);
 const STARTING_VELOCITY : Vec3 = Vec3::new(0.,0.,0.);
@@ -47,8 +47,8 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin{
     fn build(&self, app: &mut App) {
         app.add_systems(OnEnter(GameState::Playing), spawn_player)
-            .add_systems(Update, player_movement_controls.run_if(in_state(GameState::Playing)))
-            .add_systems(Update, animate_player.run_if(in_state(GameState::Playing)))
+            .add_systems(Update, player_movement_controls.run_if(in_gameplay))
+            .add_systems(Update, animate_player.run_if(in_gameplay))
             .add_systems(Update, update_immortal.run_if(in_state(GameState::Playing)));
     }
 }
