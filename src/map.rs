@@ -115,6 +115,9 @@ fn draw_map_borders(mut commands: Commands, scene_assets: Res<SceneAssets>) {
             let y = start_y - row as f32 * 0.5*BUILDING_TILE_H;
 
             commands.spawn((
+                // Domki znikają po wyjściu z głównej mapy (np. wejście do D17/walka z bossem)
+                // i są odtwarzane przy powrocie do stanu Playing.
+                DespawnOnExit(GameState::Playing),
                 Sprite {
                     image,
                     custom_size: Some(Vec2::new(BUILDING_TILE_W, BUILDING_TILE_H)),
